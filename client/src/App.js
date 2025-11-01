@@ -4,7 +4,6 @@ import RoutePanel from './components/RoutePanel';
 import NavigationPanel from './components/NavigationPanel';
 import PlaceCategorizer from './components/PlaceCategorizer';
 import PlaceDetails from './components/PlaceDetails';
-import './App.css';
 
 function App() {
   const [routes, setRoutes] = useState([]);
@@ -72,18 +71,18 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <header className="app-header">
-        <h1>Campus Navigation System</h1>
+    <div className="w-full h-screen flex flex-col">
+      <header className="bg-gradient-to-br from-primary to-secondary text-white px-4 md:px-8 py-4 flex justify-between items-center shadow-lg z-[1000]">
+        <h1 className="text-xl md:text-2xl font-semibold">Campus Navigation System</h1>
         <button 
-          className="toggle-panel-btn"
+          className="bg-white/20 border border-white/30 text-white px-4 py-2 rounded-md cursor-pointer text-sm md:text-base transition-all duration-300 hover:bg-white/30 hover:-translate-y-0.5"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
         >
           {isPanelOpen ? 'Hide' : 'Show'} Routes
         </button>
       </header>
-      <div className="app-container">
-        <div className={`sidebar-panel ${isPanelOpen ? '' : 'hidden'}`}>
+      <div className="flex flex-1 relative overflow-hidden">
+        <div className={`w-1/4 min-w-[300px] max-w-[400px] p-4 bg-gray-100 overflow-y-auto flex flex-col gap-4 transition-all duration-300 ${!isPanelOpen ? 'hidden' : ''}`}>
           <NavigationPanel
             onRouteCalculate={handleNavigationCalculate}
             onClear={handleNavigationClear}

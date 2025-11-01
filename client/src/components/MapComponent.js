@@ -3,7 +3,6 @@ import mapboxgl from 'mapbox-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
-import './MapComponent.css';
 
 const MapComponent = ({ 
   routes, 
@@ -404,9 +403,9 @@ const MapComponent = ({
       };
 
       const el = document.createElement('div');
-      el.className = 'place-marker';
-      el.innerHTML = `<div style="font-size: 24px;">${categoryIcons[place.category] || '📍'}</div>`;
+      el.style.fontSize = '24px';
       el.style.cursor = 'pointer';
+      el.innerHTML = `<div style="font-size: 24px;">${categoryIcons[place.category] || '📍'}</div>`;
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([place.longitude, place.latitude])
@@ -702,20 +701,11 @@ const MapComponent = ({
 
   if (mapError) {
     return (
-      <div className="map-container">
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          flexDirection: 'column',
-          padding: '2rem',
-          backgroundColor: '#f5f5f5',
-          color: '#d32f2f'
-        }}>
-          <h3 style={{ marginBottom: '1rem' }}>⚠️ Map Error</h3>
-          <p style={{ textAlign: 'center', marginBottom: '1rem' }}>{mapError}</p>
-          <p style={{ fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
+      <div className="flex-1 relative w-3/4 h-full">
+        <div className="flex items-center justify-center h-full flex-col p-8 bg-gray-100 text-red-600">
+          <h3 className="mb-4">⚠️ Map Error</h3>
+          <p className="text-center mb-4">{mapError}</p>
+          <p className="text-sm text-gray-600 text-center">
             Make sure REACT_APP_MAPBOX_ACCESS_TOKEN is set in client/.env and restart the app.
           </p>
         </div>
@@ -724,28 +714,33 @@ const MapComponent = ({
   }
 
   return (
-    <div className="map-container">
-      <div ref={mapContainer} className="map-container-inner" style={{ minHeight: '400px' }} />
-      <div className="map-controls">
-        <div className="map-info">
+    <div className="flex-1 relative w-3/4 h-full">
+      <div ref={mapContainer} className="w-full h-full" style={{ minHeight: '400px' }} />
+      <div className="absolute top-2.5 right-2.5 z-[1000]">
+        <div className="bg-white px-3 py-2 rounded-md shadow-lg text-sm text-gray-700">
           {routes.length > 0 && (
             <p>{routes.length} route{routes.length !== 1 ? 's' : ''} available</p>
           )}
         </div>
       </div>
       {navInfo && (
-        <div className="nav-info-panel">
-          <div className="nav-info-header">📍 Navigation</div>
-          <div className="nav-info-item">
-            <strong>Travel Time:</strong> {navInfo.time}
+        <div className="absolute bottom-5 right-5 bg-white p-4 rounded-lg shadow-xl z-[1000] min-w-[200px] max-w-[300px]">
+          <div className="font-semibold text-base mb-3 text-gray-800 border-b border-gray-200 pb-2">📍 Navigation</div>
+          <div className="mb-2 text-sm text-gray-600">
+            <strong className="text-gray-800 mr-2">Travel Time:</strong> {navInfo.time}
           </div>
-          <div className="nav-info-item">
-            <strong>Distance:</strong> {navInfo.distance}
+          <div className="mb-2 text-sm text-gray-600">
+            <strong className="text-gray-800 mr-2">Distance:</strong> {navInfo.distance}
           </div>
-          <button className="nav-info-close" onClick={() => {
-            setNavInfo(null);
-            if (onNavigationClear) onNavigationClear();
-          }}>✕</button>
+          <button 
+            className="absolute top-2 right-2 bg-transparent border-none text-xl cursor-pointer text-gray-400 hover:text-gray-700 p-0 w-6 h-6 flex items-center justify-center" 
+            onClick={() => {
+              setNavInfo(null);
+              if (onNavigationClear) onNavigationClear();
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

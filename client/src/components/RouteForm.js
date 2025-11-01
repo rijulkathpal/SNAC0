@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './RouteForm.css';
 
 const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCallbackChange }) => {
   const [formData, setFormData] = useState({
@@ -180,9 +179,9 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
   };
 
   return (
-    <form className="route-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label htmlFor="name">Route Name *</label>
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <div className="flex flex-col gap-2">
+        <label htmlFor="name" className="text-sm font-semibold text-gray-700">Route Name *</label>
         <input
           type="text"
           id="name"
@@ -190,13 +189,15 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
           value={formData.name}
           onChange={handleChange}
           placeholder="Enter route name"
-          className={errors.name ? 'error' : ''}
+          className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+            errors.name ? 'border-red-500' : 'border-gray-300 focus:border-primary'
+          }`}
         />
-        {errors.name && <span className="error-message">{errors.name}</span>}
+        {errors.name && <span className="text-xs text-red-500">{errors.name}</span>}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="description">Description</label>
+      <div className="flex flex-col gap-2">
+        <label htmlFor="description" className="text-sm font-semibold text-gray-700">Description</label>
         <textarea
           id="description"
           name="description"
@@ -204,18 +205,20 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
           onChange={handleChange}
           placeholder="Enter route description (optional)"
           rows="3"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
         />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="color">Route Color</label>
-        <div className="color-input-group">
+      <div className="flex flex-col gap-2">
+        <label htmlFor="color" className="text-sm font-semibold text-gray-700">Route Color</label>
+        <div className="flex gap-2 items-center">
           <input
             type="color"
             id="color"
             name="color"
             value={formData.color}
             onChange={handleChange}
+            className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
           />
           <input
             type="text"
@@ -223,18 +226,22 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
             onChange={handleChange}
             name="color"
             placeholder="#3b82f6"
-            className="color-text-input"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
       </div>
 
-      <div className="form-group">
-        <div className="waypoints-header">
-          <label>Waypoints *</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-center mb-2">
+          <label className="text-sm font-semibold text-gray-700">Waypoints *</label>
+          <div className="flex gap-2">
             <button
               type="button"
-              className={`btn-toggle-draw ${isDrawing ? 'active' : ''}`}
+              className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
+                isDrawing
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
               onClick={() => setIsDrawing(!isDrawing)}
               title={isDrawing ? 'Click on map to add waypoints' : 'Enable map clicking'}
             >
@@ -242,7 +249,7 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
             </button>
             <button
               type="button"
-              className="btn-add-waypoint"
+              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200 transition-colors"
               onClick={handleAddWaypoint}
             >
               + Add Manually
@@ -250,32 +257,25 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
           </div>
         </div>
         {isDrawing && (
-          <div className="drawing-hint" style={{ 
-            padding: '8px', 
-            backgroundColor: '#e3f2fd', 
-            borderRadius: '4px', 
-            marginBottom: '8px',
-            fontSize: '0.9em',
-            color: '#1976d2'
-          }}>
+          <div className="p-2 bg-blue-50 rounded text-sm text-blue-700 mb-2">
             💡 Click anywhere on the map to add waypoints
           </div>
         )}
         {errors.waypoints && (
-          <span className="error-message">{errors.waypoints}</span>
+          <span className="text-xs text-red-500">{errors.waypoints}</span>
         )}
 
-        <div className="waypoints-list">
+        <div className="space-y-3">
           {formData.waypoints.map((waypoint, index) => (
-            <div key={index} className="waypoint-item">
-              <div className="waypoint-header">
-                <span className="waypoint-number">Point {index + 1}</span>
-                <div className="waypoint-actions">
+            <div key={index} className="p-3 border border-gray-200 rounded-lg bg-white">
+              <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
+                <span className="text-sm font-medium text-gray-700">Point {index + 1}</span>
+                <div className="flex gap-1">
                   <button
                     type="button"
                     onClick={() => handleMoveWaypoint(index, 'up')}
                     disabled={index === 0}
-                    className="btn-move"
+                    className="px-2 py-1 text-gray-600 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Move up"
                   >
                     ↑
@@ -284,7 +284,7 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
                     type="button"
                     onClick={() => handleMoveWaypoint(index, 'down')}
                     disabled={index === formData.waypoints.length - 1}
-                    className="btn-move"
+                    className="px-2 py-1 text-gray-600 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Move down"
                   >
                     ↓
@@ -292,58 +292,65 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
                   <button
                     type="button"
                     onClick={() => handleRemoveWaypoint(index)}
-                    className="btn-remove"
+                    className="px-2 py-1 text-red-600 border border-red-300 rounded text-sm hover:bg-red-50 transition-colors"
                     title="Remove"
                   >
                     ×
                   </button>
                 </div>
               </div>
-              <div className="waypoint-fields">
-                <div className="field-group">
-                  <label>Name</label>
+              <div className="space-y-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-600">Name</label>
                   <input
                     type="text"
                     value={waypoint.name || ''}
                     onChange={(e) => handleWaypointChange(index, 'name', e.target.value)}
                     placeholder={`Point ${index + 1}`}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
-                <div className="field-group">
-                  <label>Latitude *</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={waypoint.latitude || ''}
-                    onChange={(e) => handleWaypointChange(index, 'latitude', e.target.value)}
-                    placeholder="40.7128"
-                    className={errors[`waypoint_${index}`] ? 'error' : ''}
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-600">Latitude *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={waypoint.latitude || ''}
+                      onChange={(e) => handleWaypointChange(index, 'latitude', e.target.value)}
+                      placeholder="40.7128"
+                      className={`w-full px-2 py-1.5 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 ${
+                        errors[`waypoint_${index}`] ? 'border-red-500' : 'border-gray-300 focus:border-primary'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-600">Longitude *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={waypoint.longitude || ''}
+                      onChange={(e) => handleWaypointChange(index, 'longitude', e.target.value)}
+                      placeholder="-74.0060"
+                      className={`w-full px-2 py-1.5 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 ${
+                        errors[`waypoint_${index}`] ? 'border-red-500' : 'border-gray-300 focus:border-primary'
+                      }`}
+                    />
+                  </div>
                 </div>
-                <div className="field-group">
-                  <label>Longitude *</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={waypoint.longitude || ''}
-                    onChange={(e) => handleWaypointChange(index, 'longitude', e.target.value)}
-                    placeholder="-74.0060"
-                    className={errors[`waypoint_${index}`] ? 'error' : ''}
-                  />
-                </div>
+                {errors[`waypoint_${index}`] && (
+                  <span className="text-xs text-red-500">{errors[`waypoint_${index}`]}</span>
+                )}
               </div>
-              {errors[`waypoint_${index}`] && (
-                <span className="error-message">{errors[`waypoint_${index}`]}</span>
-              )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="form-actions">
+      <div className="flex gap-2 pt-4 border-t border-gray-200">
         <button 
           type="button" 
-          className="btn-cancel" 
+          className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors" 
           onClick={() => {
             setIsDrawing(false);
             if (onMapClickCallbackChange) {
@@ -357,7 +364,10 @@ const RouteForm = ({ route, onSave, onCancel, onDrawingModeChange, onMapClickCal
         >
           Cancel
         </button>
-        <button type="submit" className="btn-submit">
+        <button 
+          type="submit" 
+          className="flex-1 px-4 py-2 bg-primary text-white border-none rounded-md text-sm font-semibold cursor-pointer hover:bg-[#5568d3] transition-colors"
+        >
           {route ? 'Update Route' : 'Create Route'}
         </button>
       </div>

@@ -1,6 +1,5 @@
 import React from 'react';
 import WeatherWidget from './WeatherWidget';
-import './PlaceDetails.css';
 
 const PlaceDetails = ({ place, onClose }) => {
   if (!place) return null;
@@ -47,13 +46,21 @@ const PlaceDetails = ({ place, onClose }) => {
   };
 
   return (
-    <div className="place-details-overlay" onClick={onClose}>
-      <div className="place-details" onClick={(e) => e.stopPropagation()}>
-        <button className="place-details-close" onClick={onClose}>✕</button>
+    <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4" onClick={onClose}>
+      <div 
+        className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative p-6" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button 
+          className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700 bg-transparent border-none cursor-pointer w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" 
+          onClick={onClose}
+        >
+          ✕
+        </button>
         
-        <div className="place-details-header">
-          <h2>{place.name}</h2>
-          <span className="place-category-badge">
+        <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 m-0">{place.name}</h2>
+          <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
             {categoryLabels[place.category] || categoryLabels.other}
           </span>
         </div>
@@ -61,47 +68,51 @@ const PlaceDetails = ({ place, onClose }) => {
         <WeatherWidget latitude={place.latitude} longitude={place.longitude} />
 
         {place.description && (
-          <div className="place-description">
-            <h3>Description</h3>
-            <p>{place.description}</p>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Description</h3>
+            <p className="text-gray-600 leading-relaxed">{place.description}</p>
           </div>
         )}
 
-        <div className="place-status">
-          <h3>Current Status</h3>
-          <p className="status-text">{getCurrentDayStatus()}</p>
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Current Status</h3>
+          <p className="text-base font-medium">{getCurrentDayStatus()}</p>
         </div>
 
-        <div className="place-opening-hours">
-          <h3>Opening Hours</h3>
-          <div className="hours-list">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Opening Hours</h3>
+          <div className="space-y-2">
             {Object.entries(place.openingHours || {}).map(([day, hours]) => (
-              <div key={day} className="hours-item">
-                <span className="day-name">{day.charAt(0).toUpperCase() + day.slice(1)}</span>
-                <span className="day-hours">{getDayStatus(hours)}</span>
+              <div key={day} className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-sm font-medium text-gray-700 capitalize">{day}</span>
+                <span className="text-sm text-gray-600">{getDayStatus(hours)}</span>
               </div>
             ))}
           </div>
         </div>
 
         {place.contactInfo && (place.contactInfo.phone || place.contactInfo.email || place.contactInfo.website) && (
-          <div className="place-contact">
-            <h3>Contact Information</h3>
-            {place.contactInfo.phone && (
-              <div>📞 {place.contactInfo.phone}</div>
-            )}
-            {place.contactInfo.email && (
-              <div>📧 {place.contactInfo.email}</div>
-            )}
-            {place.contactInfo.website && (
-              <div>🌐 <a href={place.contactInfo.website} target="_blank" rel="noopener noreferrer">{place.contactInfo.website}</a></div>
-            )}
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Contact Information</h3>
+            <div className="space-y-2 text-gray-600">
+              {place.contactInfo.phone && (
+                <div className="text-sm">📞 {place.contactInfo.phone}</div>
+              )}
+              {place.contactInfo.email && (
+                <div className="text-sm">📧 {place.contactInfo.email}</div>
+              )}
+              {place.contactInfo.website && (
+                <div className="text-sm">
+                  🌐 <a href={place.contactInfo.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{place.contactInfo.website}</a>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        <div className="place-location">
-          <h3>Location</h3>
-          <div className="coordinates">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Location</h3>
+          <div className="text-sm text-gray-600 font-mono">
             {place.latitude.toFixed(6)}, {place.longitude.toFixed(6)}
           </div>
         </div>

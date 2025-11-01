@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './NavigationPanel.css';
 
 const NavigationPanel = ({ onRouteCalculate, onClear }) => {
   const [startLocation, setStartLocation] = useState({ name: '', lng: null, lat: null });
@@ -187,13 +186,13 @@ const NavigationPanel = ({ onRouteCalculate, onClear }) => {
   };
 
   return (
-    <div className="navigation-panel">
-      <h3>📍 Navigation</h3>
+    <div className="bg-white p-4 rounded-lg mb-4 shadow-md">
+      <h3 className="m-0 mb-4 text-gray-800 text-lg">📍 Navigation</h3>
       
-      <div className="nav-form">
-        <div className="nav-input-group">
-          <label>Start Location</label>
-          <div className="nav-input-row" style={{ position: 'relative' }}>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-gray-600">Start Location</label>
+          <div className="relative flex gap-2 items-center">
             <input
               type="text"
               placeholder="Search or click on map..."
@@ -209,34 +208,50 @@ const NavigationPanel = ({ onRouteCalculate, onClear }) => {
                 }
               }}
               onBlur={() => {
-                // Delay to allow suggestion click
                 setTimeout(() => setShowStartSuggestions(false), 200);
               }}
+              className="flex-1 px-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
             <button
-              className={`btn-set-location ${isSettingStart ? 'active' : ''}`}
+              className={`px-4 py-3 bg-gray-100 border border-gray-300 rounded-md cursor-pointer text-xl transition-all duration-200 min-w-[50px] ${
+                isSettingStart 
+                  ? 'bg-primary text-white border-primary shadow-md shadow-primary/30' 
+                  : 'hover:bg-gray-200'
+              }`}
               onClick={() => handleSetFromMap('start')}
               title="Click on map to set start"
             >
               🖱️
             </button>
             {showStartSuggestions && startSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
+              <div className="absolute top-full left-0 right-[50px] mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[1000] max-h-[200px] overflow-y-auto">
                 {startSuggestions.map((suggestion, idx) => (
                   <div
                     key={idx}
-                    className={`suggestion-item ${suggestion.isLocal ? 'local-place' : ''}`}
+                    className={`p-3 cursor-pointer border-b border-gray-100 transition-colors duration-200 ${
+                      suggestion.isLocal 
+                        ? 'bg-blue-50 border-l-4 border-l-primary' 
+                        : ''
+                    } ${
+                      suggestion.isLocal 
+                        ? 'hover:bg-blue-100' 
+                        : 'hover:bg-gray-50'
+                    }`}
                     onClick={() => handleSelectSuggestion('start', suggestion)}
                   >
-                    <div className="suggestion-name">
+                    <div className={`text-sm mb-1 ${
+                      suggestion.isLocal 
+                        ? 'font-semibold text-primary' 
+                        : 'font-medium text-gray-800'
+                    }`}>
                       {suggestion.isLocal && '🏫 '}
                       {suggestion.name}
                     </div>
                     {suggestion.context && (
-                      <div className="suggestion-context">{suggestion.context}</div>
+                      <div className="text-xs text-gray-600 italic">{suggestion.context}</div>
                     )}
                     {suggestion.description && (
-                      <div className="suggestion-desc">{suggestion.description.substring(0, 60)}...</div>
+                      <div className="text-xs text-gray-500 mt-1">{suggestion.description.substring(0, 60)}...</div>
                     )}
                   </div>
                 ))}
@@ -244,15 +259,15 @@ const NavigationPanel = ({ onRouteCalculate, onClear }) => {
             )}
           </div>
           {startLocation.lng && (
-            <div className="location-coords">
+            <div className="text-xs text-gray-500 italic pl-2">
               {startLocation.lat.toFixed(4)}, {startLocation.lng.toFixed(4)}
             </div>
           )}
         </div>
 
-        <div className="nav-input-group">
-          <label>End Location</label>
-          <div className="nav-input-row" style={{ position: 'relative' }}>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-gray-600">End Location</label>
+          <div className="relative flex gap-2 items-center">
             <input
               type="text"
               placeholder="Search or click on map..."
@@ -268,34 +283,50 @@ const NavigationPanel = ({ onRouteCalculate, onClear }) => {
                 }
               }}
               onBlur={() => {
-                // Delay to allow suggestion click
                 setTimeout(() => setShowEndSuggestions(false), 200);
               }}
+              className="flex-1 px-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
             <button
-              className={`btn-set-location ${isSettingEnd ? 'active' : ''}`}
+              className={`px-4 py-3 bg-gray-100 border border-gray-300 rounded-md cursor-pointer text-xl transition-all duration-200 min-w-[50px] ${
+                isSettingEnd 
+                  ? 'bg-primary text-white border-primary shadow-md shadow-primary/30' 
+                  : 'hover:bg-gray-200'
+              }`}
               onClick={() => handleSetFromMap('end')}
               title="Click on map to set end"
             >
               🖱️
             </button>
             {showEndSuggestions && endSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
+              <div className="absolute top-full left-0 right-[50px] mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[1000] max-h-[200px] overflow-y-auto">
                 {endSuggestions.map((suggestion, idx) => (
                   <div
                     key={idx}
-                    className={`suggestion-item ${suggestion.isLocal ? 'local-place' : ''}`}
+                    className={`p-3 cursor-pointer border-b border-gray-100 transition-colors duration-200 ${
+                      suggestion.isLocal 
+                        ? 'bg-blue-50 border-l-4 border-l-primary' 
+                        : ''
+                    } ${
+                      suggestion.isLocal 
+                        ? 'hover:bg-blue-100' 
+                        : 'hover:bg-gray-50'
+                    }`}
                     onClick={() => handleSelectSuggestion('end', suggestion)}
                   >
-                    <div className="suggestion-name">
+                    <div className={`text-sm mb-1 ${
+                      suggestion.isLocal 
+                        ? 'font-semibold text-primary' 
+                        : 'font-medium text-gray-800'
+                    }`}>
                       {suggestion.isLocal && '🏫 '}
                       {suggestion.name}
                     </div>
                     {suggestion.context && (
-                      <div className="suggestion-context">{suggestion.context}</div>
+                      <div className="text-xs text-gray-600 italic">{suggestion.context}</div>
                     )}
                     {suggestion.description && (
-                      <div className="suggestion-desc">{suggestion.description.substring(0, 60)}...</div>
+                      <div className="text-xs text-gray-500 mt-1">{suggestion.description.substring(0, 60)}...</div>
                     )}
                   </div>
                 ))}
@@ -303,26 +334,36 @@ const NavigationPanel = ({ onRouteCalculate, onClear }) => {
             )}
           </div>
           {endLocation.lng && (
-            <div className="location-coords">
+            <div className="text-xs text-gray-500 italic pl-2">
               {endLocation.lat.toFixed(4)}, {endLocation.lng.toFixed(4)}
             </div>
           )}
         </div>
 
-        <div className="nav-input-group">
-          <label>Travel Mode</label>
-          <select value={profile} onChange={(e) => setProfile(e.target.value)}>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-gray-600">Travel Mode</label>
+          <select 
+            value={profile} 
+            onChange={(e) => setProfile(e.target.value)}
+            className="px-3 py-3 border border-gray-300 rounded-md text-sm bg-white cursor-pointer focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+          >
             <option value="driving">🚗 Driving</option>
             <option value="walking">🚶 Walking</option>
             <option value="cycling">🚴 Cycling</option>
           </select>
         </div>
 
-        <div className="nav-actions">
-          <button className="btn-calculate" onClick={handleCalculateRoute}>
+        <div className="flex gap-2">
+          <button 
+            className="flex-1 px-3 py-3 bg-primary text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all duration-200 hover:bg-[#5568d3] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30" 
+            onClick={handleCalculateRoute}
+          >
             Get Directions
           </button>
-          <button className="btn-clear" onClick={handleClear}>
+          <button 
+            className="px-4 py-3 bg-gray-100 text-gray-600 border border-gray-300 rounded-md text-sm cursor-pointer transition-all duration-200 hover:bg-gray-200" 
+            onClick={handleClear}
+          >
             Clear
           </button>
         </div>

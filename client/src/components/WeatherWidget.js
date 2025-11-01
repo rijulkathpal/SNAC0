@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './WeatherWidget.css';
 
 const WeatherWidget = ({ latitude, longitude }) => {
   const [weather, setWeather] = useState(null);
@@ -36,24 +35,28 @@ const WeatherWidget = ({ latitude, longitude }) => {
   if (!latitude || !longitude) return null;
 
   return (
-    <div className="weather-widget">
-      <div className="weather-header">
-        <h4>🌤️ Weather</h4>
-        <button onClick={fetchWeather} disabled={loading} className="weather-refresh">
+    <div className="mb-4 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="text-base font-semibold text-gray-800 m-0">🌤️ Weather</h4>
+        <button 
+          onClick={fetchWeather} 
+          disabled={loading}
+          className="text-lg hover:rotate-180 transition-transform duration-500 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent border-none cursor-pointer"
+        >
           🔄
         </button>
       </div>
-      {loading && <div className="weather-loading">Loading...</div>}
-      {error && <div className="weather-error">{error}</div>}
+      {loading && <div className="text-center py-4 text-gray-600">Loading...</div>}
+      {error && <div className="text-center py-2 text-red-600 text-sm">{error}</div>}
       {weather && !loading && (
-        <div className="weather-content">
-          <div className="weather-temp">
+        <div>
+          <div className="text-3xl font-bold text-gray-900 mb-2">
             {Math.round(weather.temp)}°C
           </div>
-          <div className="weather-description">
+          <div className="text-sm text-gray-700 mb-3 capitalize">
             {weather.description}
           </div>
-          <div className="weather-details">
+          <div className="space-y-1 text-xs text-gray-600">
             <div>Feels like: {Math.round(weather.feelsLike)}°C</div>
             <div>Humidity: {weather.humidity}%</div>
             <div>Wind: {weather.windSpeed} m/s</div>

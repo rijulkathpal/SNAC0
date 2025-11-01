@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PlaceForm from './PlaceForm';
-import './PlaceCategorizer.css';
 
 const PlaceCategorizer = ({ onPlaceSelect }) => {
   const [places, setPlaces] = useState([]);
@@ -91,10 +90,15 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
 
   if (isCreating || editingPlace) {
     return (
-      <div className="place-categorizer">
-        <div className="categorizer-header">
-          <h3>{editingPlace ? 'Edit' : 'Add'} Place</h3>
-          <button onClick={() => { setIsCreating(false); setEditingPlace(null); }}>✕</button>
+      <div className="bg-white p-4 rounded-lg mb-4 shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 text-gray-800 text-lg">{editingPlace ? 'Edit' : 'Add'} Place</h3>
+          <button 
+            className="text-xl text-gray-500 hover:text-gray-700 bg-transparent border-none cursor-pointer"
+            onClick={() => { setIsCreating(false); setEditingPlace(null); }}
+          >
+            ✕
+          </button>
         </div>
         <PlaceForm
           place={editingPlace}
@@ -106,40 +110,41 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
   }
 
   return (
-    <div className="place-categorizer">
-      <div className="categorizer-header">
-        <h3>🗺️ Places</h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
+    <div className="bg-white p-4 rounded-lg mb-4 shadow-md">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="m-0 text-gray-800 text-lg">🗺️ Places</h3>
+        <div className="flex gap-2">
           <button 
-            className="btn-populate-places" 
+            className={`px-4 py-2 rounded-md text-white border-none cursor-pointer text-sm font-medium transition-all duration-200 ${
+              isPopulating 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-green-500 hover:bg-green-600'
+            }`}
             onClick={handlePopulateCollegePlaces}
             disabled={isPopulating}
             title="Populate college places from OpenStreetMap"
-            style={{
-              padding: '0.5rem 1rem',
-              background: isPopulating ? '#ccc' : '#4CAF50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: isPopulating ? 'not-allowed' : 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: '500'
-            }}
           >
             {isPopulating ? '⏳ Loading...' : '🌐 Populate Places'}
           </button>
-          <button className="btn-add-place" onClick={() => setIsCreating(true)}>
+          <button 
+            className="px-4 py-2 bg-primary text-white border-none rounded-md cursor-pointer text-sm font-medium transition-all duration-200 hover:bg-[#5568d3]"
+            onClick={() => setIsCreating(true)}
+          >
             + Add Place
           </button>
         </div>
       </div>
 
-      <div className="category-filter">
-        <div className="category-buttons">
+      <div className="mb-4">
+        <div className="flex flex-wrap gap-2">
           {Object.entries(categories).map(([key, { label, icon }]) => (
             <button
               key={key}
-              className={`category-btn ${selectedCategory === key ? 'active' : ''}`}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                selectedCategory === key
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
               onClick={() => setSelectedCategory(key)}
             >
               {icon} {label.split(' ')[1]}
@@ -148,27 +153,27 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
         </div>
       </div>
 
-      {loading && <div className="loading">Loading places...</div>}
+      {loading && <div className="text-center py-4 text-gray-500">Loading places...</div>}
 
-      <div className="places-list">
+      <div className="space-y-4">
         {selectedCategory && selectedCategory !== 'all' ? (
           groupedPlaces[selectedCategory]?.length > 0 ? (
             groupedPlaces[selectedCategory].map((place) => (
-                <div key={place._id} className="place-item">
+                <div key={place._id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all duration-200">
                   <div
-                    className="place-item-content"
+                    className="flex-1 cursor-pointer"
                     onClick={() => onPlaceSelect(place)}
                   >
-                    <div className="place-item-header">
-                      <span className="place-icon">{categories[place.category]?.icon || '📍'}</span>
-                      <span className="place-name">{place.name}</span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-2xl">{categories[place.category]?.icon || '📍'}</span>
+                      <span className="font-medium text-gray-800">{place.name}</span>
                     </div>
                     {place.description && (
-                      <div className="place-item-desc">{place.description.substring(0, 50)}...</div>
+                      <div className="text-xs text-gray-500 ml-8">{place.description.substring(0, 50)}...</div>
                     )}
                   </div>
                   <button
-                    className="place-edit-btn"
+                    className="ml-2 p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingPlace(place);
@@ -180,30 +185,30 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
                 </div>
             ))
           ) : (
-            <div className="empty-state">No places in this category</div>
+            <div className="text-center py-8 text-gray-500">No places in this category</div>
           )
         ) : (
           Object.entries(groupedPlaces).map(([category, categoryPlaces]) => (
-            <div key={category} className="category-group">
-              <div className="category-group-header">
-                <span className="category-icon">{categories[category]?.icon || '📍'}</span>
-                <span className="category-name">{categories[category]?.label || category}</span>
-                <span className="category-count">({categoryPlaces.length})</span>
+            <div key={category} className="mb-4">
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200">
+                <span className="text-xl">{categories[category]?.icon || '📍'}</span>
+                <span className="font-semibold text-gray-700">{categories[category]?.label || category}</span>
+                <span className="text-sm text-gray-400">({categoryPlaces.length})</span>
               </div>
-              <div className="category-places">
+              <div className="space-y-2">
                 {categoryPlaces.map((place) => (
-                  <div key={place._id} className="place-item">
+                  <div key={place._id} className="flex items-center justify-between p-2 border border-gray-200 rounded-lg hover:border-primary hover:shadow-sm transition-all duration-200">
                     <div
-                      className="place-item-content"
+                      className="flex-1 cursor-pointer"
                       onClick={() => onPlaceSelect(place)}
                     >
-                      <span className="place-name">{place.name}</span>
+                      <span className="font-medium text-gray-800">{place.name}</span>
                       {place.description && (
-                        <div className="place-item-desc">{place.description.substring(0, 40)}...</div>
+                        <div className="text-xs text-gray-500 mt-1">{place.description.substring(0, 40)}...</div>
                       )}
                     </div>
                     <button
-                      className="place-edit-btn"
+                      className="ml-2 p-1 text-gray-500 hover:text-primary hover:bg-gray-100 rounded transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingPlace(place);
@@ -221,9 +226,9 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
       </div>
 
       {places.length === 0 && !loading && (
-        <div className="empty-state">
+        <div className="text-center py-12 text-gray-500">
           <p>No places found</p>
-          <p className="hint">Add places to see them here</p>
+          <p className="text-sm text-gray-400 mt-2">Add places to see them here</p>
         </div>
       )}
     </div>
