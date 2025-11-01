@@ -1,21 +1,32 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
-import './MapComponent.css';
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import mapboxgl from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+import "./MapComponent.css";
 
-const MapComponent = ({ 
-  routes, 
-  selectedRoute, 
-  onRouteSelect, 
-  isDrawingMode = false, 
+const MapComponent = ({
+  routes,
+  selectedRoute,
+  onRouteSelect,
+  isDrawingMode = false,
   onMapClick = null,
   navigationRoute = null,
+  categoryIcons = {
+    eateries: "🍽️",
+    recreation: "⚽",
+    educational: "📚",
+    administration: "🏛️",
+    staff_quarters: "🏠",
+    hostel: "🏘️",
+    library: "📖",
+    other: "", // Changed from pin to building
+  },
+  nRoute = null,
   onNavigationClear = null,
   isSettingNavLocation = null,
   places = [],
-  onPlaceSelect = null
+  onPlaceSelect = null,
 }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -28,7 +39,7 @@ const MapComponent = ({
   const placeMarkersRef = useRef([]);
   const navRouteLayerRef = useRef(null);
   const mapClickHandlerRef = useRef(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const customSearchContainerRef = useRef(null);
@@ -36,9 +47,10 @@ const MapComponent = ({
 
   useEffect(() => {
     const mapboxToken = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
-    
-    if (!mapboxToken || mapboxToken === 'paste_your_mapbox_api_key_here') {
-      const errorMsg = 'Mapbox access token is not set! Please add REACT_APP_MAPBOX_ACCESS_TOKEN to your .env file and restart the app.';
+
+    if (!mapboxToken || mapboxToken === "paste_your_mapbox_api_key_here") {
+      const errorMsg =
+        "Mapbox access token is not set! Please add REACT_APP_MAPBOX_ACCESS_TOKEN to your .env file and restart the app.";
       console.error(errorMsg);
       setMapError(errorMsg);
       return;
@@ -50,20 +62,20 @@ const MapComponent = ({
       try {
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/akshay-vishnu/cmhftdgs7008601pj1wv26l94',
-          center: [79.5300, 17.9833], // NIT Warangal coordinates (longitude, latitude)
-          zoom: 15
+          style: "mapbox://styles/akshay-vishnu/cmhftdgs7008601pj1wv26l94",
+          center: [79.5328, 17.9808], // NIT Warangal coordinates (longitude, latitude)
+          zoom: 15,
         });
 
         // Create custom search control container
-        const customSearchContainer = document.createElement('div');
-        customSearchContainer.className = 'custom-map-search';
-        customSearchContainer.style.position = 'absolute';
-        customSearchContainer.style.top = '10px';
-        customSearchContainer.style.left = '10px';
-        customSearchContainer.style.zIndex = '1000';
-        customSearchContainer.style.width = '400px';
-        customSearchContainer.style.maxWidth = '90vw';
+        const customSearchContainer = document.createElement("div");
+        customSearchContainer.className = "custom-map-search";
+        customSearchContainer.style.position = "absolute";
+        customSearchContainer.style.top = "10px";
+        customSearchContainer.style.left = "10px";
+        customSearchContainer.style.zIndex = "1000";
+        customSearchContainer.style.width = "400px";
+        customSearchContainer.style.maxWidth = "90vw";
         mapContainer.current.appendChild(customSearchContainer);
         customSearchContainerRef.current = customSearchContainer;
 
@@ -73,29 +85,35 @@ const MapComponent = ({
           searchMapbox: async (query) => {
             try {
               const response = await fetch(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&proximity=79.5300,17.9833&bbox=79.40,17.90,79.65,18.05&limit=5`
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+                  query
+                )}.json?access_token=${mapboxToken}&proximity=79.5328,17.9808&bbox=79.40,17.90,79.65,18.05&limit=5`
               );
               const data = await response.json();
               return data.features || [];
             } catch (error) {
-              console.error('Mapbox search error:', error);
+              console.error("Mapbox search error:", error);
               return [];
             }
-          }
+          },
         };
 
-        map.current.on('load', () => {
+        map.current.on("load", () => {
           setMapLoaded(true);
           setMapError(null);
         });
 
-        map.current.on('error', (e) => {
-          console.error('Mapbox error:', e);
-          setMapError('Failed to load map. Please check your Mapbox API key and restart the app.');
+        map.current.on("error", (e) => {
+          console.error("Mapbox error:", e);
+          setMapError(
+            "Failed to load map. Please check your Mapbox API key and restart the app."
+          );
         });
       } catch (error) {
-        console.error('Error initializing map:', error);
-        setMapError('Error initializing map. Please check the browser console for details.');
+        console.error("Error initializing map:", error);
+        setMapError(
+          "Error initializing map. Please check the browser console for details."
+        );
       }
     }
 
@@ -104,14 +122,14 @@ const MapComponent = ({
         try {
           customSearchContainerRef.current.remove();
         } catch (error) {
-          console.warn('Error removing search container:', error);
+          console.warn("Error removing search container:", error);
         }
       }
       if (map.current) {
         try {
           map.current.remove();
         } catch (error) {
-          console.warn('Error removing map:', error);
+          console.warn("Error removing map:", error);
         }
         map.current = null;
       }
@@ -131,35 +149,48 @@ const MapComponent = ({
       const allSuggestions = [];
 
       // Search local places first
-      const localPlaceMatches = places.filter(place => {
-        const nameMatch = place.name.toLowerCase().includes(queryLower);
-        const descMatch = place.description && place.description.toLowerCase().includes(queryLower);
-        return nameMatch || descMatch;
-      }).map(place => ({
-        name: place.name,
-        lng: place.longitude,
-        lat: place.latitude,
-        context: place.category ? `🏫 ${place.category.charAt(0).toUpperCase() + place.category.slice(1).replace('_', ' ')}` : 'College Place',
-        isLocal: true,
-        description: place.description || ''
-      }));
+      const localPlaceMatches = places
+        .filter((place) => {
+          const nameMatch = place.name.toLowerCase().includes(queryLower);
+          const descMatch =
+            place.description &&
+            place.description.toLowerCase().includes(queryLower);
+          return nameMatch || descMatch;
+        })
+        .map((place) => ({
+          name: place.name,
+          lng: place.longitude,
+          lat: place.latitude,
+          context: place.category
+            ? `🏫 ${
+                place.category.charAt(0).toUpperCase() +
+                place.category.slice(1).replace("_", " ")
+              }`
+            : "College Place",
+          isLocal: true,
+          description: place.description || "",
+        }));
 
       allSuggestions.push(...localPlaceMatches);
 
       // Then search Mapbox
       if (geocoderRef.current && geocoderRef.current.searchMapbox) {
         try {
-          const mapboxResults = await geocoderRef.current.searchMapbox(searchQuery);
-          const mapboxSuggestions = mapboxResults.map(feature => ({
+          const mapboxResults = await geocoderRef.current.searchMapbox(
+            searchQuery
+          );
+          const mapboxSuggestions = mapboxResults.map((feature) => ({
             name: feature.place_name,
             lng: feature.center[0],
             lat: feature.center[1],
-            context: feature.context ? feature.context.map(ctx => ctx.text).join(', ') : 'External Location',
-            isLocal: false
+            context: feature.context
+              ? feature.context.map((ctx) => ctx.text).join(", ")
+              : "External Location",
+            isLocal: false,
           }));
           allSuggestions.push(...mapboxSuggestions);
         } catch (error) {
-          console.error('Error in Mapbox search:', error);
+          console.error("Error in Mapbox search:", error);
         }
       }
 
@@ -174,7 +205,7 @@ const MapComponent = ({
   // Handle search result selection
   const handleSearchSelect = useCallback((suggestion) => {
     const { lng, lat, name } = suggestion;
-    
+
     // If navigation mode is active, set the location
     if (window.setNavLocationType && window.setNavLocation) {
       window.setNavLocation(lng, lat, name);
@@ -186,19 +217,19 @@ const MapComponent = ({
       map.current.flyTo({
         center: [lng, lat],
         zoom: 16,
-        duration: 1500
+        duration: 1500,
       });
 
       // Create a temporary marker
-      const el = document.createElement('div');
-      el.className = 'search-result-marker';
-      el.style.width = '20px';
-      el.style.height = '20px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = '#667eea';
-      el.style.border = '3px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
-      
+      const el = document.createElement("div");
+      el.className = "search-result-marker";
+      el.style.width = "20px";
+      el.style.height = "20px";
+      el.style.borderRadius = "50%";
+      el.style.backgroundColor = "#667eea";
+      el.style.border = "3px solid white";
+      el.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.3)";
+
       const marker = new mapboxgl.Marker(el)
         .setLngLat([lng, lat])
         .setPopup(new mapboxgl.Popup().setHTML(`<strong>${name}</strong>`))
@@ -209,7 +240,7 @@ const MapComponent = ({
     }
 
     // Clear search
-    setSearchQuery('');
+    setSearchQuery("");
     setShowSearchSuggestions(false);
   }, []);
 
@@ -218,7 +249,9 @@ const MapComponent = ({
     if (!customSearchContainerRef.current || !mapLoaded) return;
 
     const container = customSearchContainerRef.current;
-    const suggestionsHTML = showSearchSuggestions && searchSuggestions.length > 0 ? `
+    const suggestionsHTML =
+      showSearchSuggestions && searchSuggestions.length > 0
+        ? `
       <div id="map-search-suggestions" style="
         position: absolute;
         top: 100%;
@@ -233,29 +266,59 @@ const MapComponent = ({
         max-height: 300px;
         overflow-y: auto;
       ">
-        ${searchSuggestions.map((suggestion, idx) => `
+        ${searchSuggestions
+          .map(
+            (suggestion, idx) => `
           <div 
-            class="map-suggestion-item ${suggestion.isLocal ? 'local-place' : ''}"
+            class="map-suggestion-item ${
+              suggestion.isLocal ? "local-place" : ""
+            }"
             data-index="${idx}"
             style="
               padding: 0.75rem;
               cursor: pointer;
               border-bottom: 1px solid #f0f0f0;
               transition: background-color 0.2s;
-              ${suggestion.isLocal ? 'background-color: #f0f7ff; border-left: 3px solid #667eea;' : ''}
+              ${
+                suggestion.isLocal
+                  ? "background-color: #f0f7ff; border-left: 3px solid #667eea;"
+                  : ""
+              }
             "
-            onmouseover="this.style.backgroundColor='${suggestion.isLocal ? '#e0efff' : '#f5f5f5'}'"
-            onmouseout="this.style.backgroundColor='${suggestion.isLocal ? '#f0f7ff' : 'white'}'"
+            onmouseover="this.style.backgroundColor='${
+              suggestion.isLocal ? "#e0efff" : "#f5f5f5"
+            }'"
+            onmouseout="this.style.backgroundColor='${
+              suggestion.isLocal ? "#f0f7ff" : "white"
+            }'"
           >
-            <div style="font-size: 0.9rem; font-weight: ${suggestion.isLocal ? '600' : '500'}; color: ${suggestion.isLocal ? '#667eea' : '#333'}; margin-bottom: 0.25rem;">
-              ${suggestion.isLocal ? '🏫 ' : ''}${suggestion.name}
+            <div style="font-size: 0.9rem; font-weight: ${
+              suggestion.isLocal ? "600" : "500"
+            }; color: ${
+              suggestion.isLocal ? "#667eea" : "#333"
+            }; margin-bottom: 0.25rem;">
+              ${suggestion.isLocal ? "🏫 " : ""}${suggestion.name}
             </div>
-            ${suggestion.context ? `<div style="font-size: 0.75rem; color: #666; font-style: italic;">${suggestion.context}</div>` : ''}
-            ${suggestion.description ? `<div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">${suggestion.description.substring(0, 60)}...</div>` : ''}
+            ${
+              suggestion.context
+                ? `<div style="font-size: 0.75rem; color: #666; font-style: italic;">${suggestion.context}</div>`
+                : ""
+            }
+            ${
+              suggestion.description
+                ? `<div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">${suggestion.description.substring(
+                    0,
+                    60
+                  )}...</div>`
+                : ""
+            }
           </div>
-        `).join('')}
+        `
+          )
+          .join("")}
       </div>
-    ` : '';
+    `
+        : "";
 
     container.innerHTML = `
       <div style="position: relative; width: 100%;">
@@ -270,41 +333,49 @@ const MapComponent = ({
       </div>
     `;
 
-    const input = container.querySelector('#map-search-input');
+    const input = container.querySelector("#map-search-input");
     if (input) {
-      input.addEventListener('input', (e) => {
+      input.addEventListener("input", (e) => {
         setSearchQuery(e.target.value);
       });
-      input.addEventListener('focus', () => {
+      input.addEventListener("focus", () => {
         if (searchSuggestions.length > 0) {
           setShowSearchSuggestions(true);
         }
       });
-      input.addEventListener('blur', () => {
+      input.addEventListener("blur", () => {
         setTimeout(() => setShowSearchSuggestions(false), 200);
       });
-      input.addEventListener('focus', () => {
-        input.style.borderColor = '#667eea';
+      input.addEventListener("focus", () => {
+        input.style.borderColor = "#667eea";
       });
-      input.addEventListener('blur', () => {
-        input.style.borderColor = '#ddd';
+      input.addEventListener("blur", () => {
+        input.style.borderColor = "#ddd";
       });
     }
 
     // Add click handlers for suggestions using event delegation
-    const suggestionsContainer = container.querySelector('#map-search-suggestions');
+    const suggestionsContainer = container.querySelector(
+      "#map-search-suggestions"
+    );
     if (suggestionsContainer) {
-      suggestionsContainer.addEventListener('click', (e) => {
-        const item = e.target.closest('.map-suggestion-item');
+      suggestionsContainer.addEventListener("click", (e) => {
+        const item = e.target.closest(".map-suggestion-item");
         if (item) {
-          const idx = parseInt(item.getAttribute('data-index'));
+          const idx = parseInt(item.getAttribute("data-index"));
           if (idx >= 0 && idx < searchSuggestions.length) {
             handleSearchSelect(searchSuggestions[idx]);
           }
         }
       });
     }
-  }, [mapLoaded, searchQuery, searchSuggestions, showSearchSuggestions, handleSearchSelect]);
+  }, [
+    mapLoaded,
+    searchQuery,
+    searchSuggestions,
+    showSearchSuggestions,
+    handleSearchSelect,
+  ]);
 
   // Handle map click for drawing mode or navigation location setting
   useEffect(() => {
@@ -314,30 +385,60 @@ const MapComponent = ({
       // Prevent click on geocoder control, popups, or other UI elements
       if (e.originalEvent) {
         const target = e.originalEvent.target;
-        if (target.closest && (
-          target.closest('.mapboxgl-ctrl-geocoder') ||
-          target.closest('.mapboxgl-popup') ||
-          target.closest('.mapboxgl-ctrl') ||
-          target.closest('.place-marker') ||
-          target.closest('.custom-map-search')
-        )) {
+        if (
+          target.closest &&
+          (target.closest(".mapboxgl-ctrl-geocoder") ||
+            target.closest(".mapboxgl-popup") ||
+            target.closest(".mapboxgl-ctrl") ||
+            target.closest(".place-marker") ||
+            target.closest(".custom-map-search"))
+        ) {
           return;
         }
       }
 
       const { lng, lat } = e.lngLat;
-      
-      // Check for navigation mode first
-      if (window.setNavLocationType && window.setNavLocation) {
-        console.log('Map clicked for navigation:', { type: window.setNavLocationType, lng, lat });
-        window.setNavLocation(lng, lat);
-        // Don't clear here - let the NavigationPanel handle it
-        if (map.current) {
-          map.current.getCanvas().style.cursor = '';
+
+      // Check for place collection mode (for extracting places from map)
+      if (window.isCollectingPlaces) {
+        // Show prompt to enter place name, with coordinates as default
+        const defaultName = `Place at ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        const placeName = prompt(
+          `Enter name for this place:\n\nCoordinates: ${lat.toFixed(
+            6
+          )}, ${lng.toFixed(6)}\n\n(Leave empty to skip)`,
+          defaultName
+        );
+
+        if (placeName && placeName.trim()) {
+          if (window.collectPlaceCallback) {
+            window.collectPlaceCallback({
+              name: placeName.trim(),
+              latitude: lat,
+              longitude: lng,
+            });
+          }
+        } else {
+          console.log("Place collection cancelled or empty name");
         }
         return;
       }
-      
+
+      // Check for navigation mode first
+      if (window.setNavLocationType && window.setNavLocation) {
+        console.log("Map clicked for navigation:", {
+          type: window.setNavLocationType,
+          lng,
+          lat,
+        });
+        window.setNavLocation(lng, lat);
+        // Don't clear here - let the NavigationPanel handle it
+        if (map.current) {
+          map.current.getCanvas().style.cursor = "";
+        }
+        return;
+      }
+
       // Check for drawing mode
       if (isDrawingMode && onMapClick) {
         onMapClick(lng, lat);
@@ -345,15 +446,19 @@ const MapComponent = ({
     };
 
     // Always attach the handler, but only enable cursor in specific modes
-    map.current.on('click', handleMapClick);
+    map.current.on("click", handleMapClick);
     mapClickHandlerRef.current = handleMapClick;
 
     // Update cursor based on current mode
     const updateCursor = () => {
       if (!map.current) return;
-      const isNavMode = window.setNavLocationType !== undefined && window.setNavLocationType !== null;
+      const isNavMode =
+        window.setNavLocationType !== undefined &&
+        window.setNavLocationType !== null;
       const isDrawMode = isDrawingMode && onMapClick;
-      map.current.getCanvas().style.cursor = (isNavMode || isDrawMode) ? 'crosshair' : '';
+      const isCollectMode = window.isCollectingPlaces;
+      map.current.getCanvas().style.cursor =
+        isNavMode || isDrawMode || isCollectMode ? "crosshair" : "";
     };
 
     updateCursor();
@@ -362,8 +467,8 @@ const MapComponent = ({
     return () => {
       clearInterval(cursorInterval);
       if (map.current && mapClickHandlerRef.current) {
-        map.current.off('click', mapClickHandlerRef.current);
-        map.current.getCanvas().style.cursor = '';
+        map.current.off("click", mapClickHandlerRef.current);
+        map.current.getCanvas().style.cursor = "";
         mapClickHandlerRef.current = null;
       }
     };
@@ -371,12 +476,12 @@ const MapComponent = ({
 
   // Clear existing markers and routes
   const clearMap = () => {
-    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
-    
-    if (map.current && map.current.getLayer('route-line')) {
-      map.current.removeLayer('route-line');
-      map.current.removeSource('route-line');
+
+    if (map.current && map.current.getLayer("route-line")) {
+      map.current.removeLayer("route-line");
+      map.current.removeSource("route-line");
     }
     routeLinesRef.current = [];
   };
@@ -386,33 +491,40 @@ const MapComponent = ({
     if (!map.current || !mapLoaded) return;
 
     // Clear previous place markers
-    placeMarkersRef.current.forEach(marker => marker.remove());
+    placeMarkersRef.current.forEach((marker) => marker.remove());
     placeMarkersRef.current = [];
 
     const safePlaces = Array.isArray(places) ? places : [];
-    
+
     safePlaces.forEach((place) => {
       const categoryIcons = {
-        eateries: '🍽️',
-        recreation: '⚽',
-        educational: '📚',
-        administration: '🏛️',
-        staff_quarters: '🏠',
-        hostel: '🏘️',
-        library: '📖',
-        other: '📍'
+        eateries: "🍽️",
+        recreation: "⚽",
+        educational: "📚",
+        administration: "🏛️",
+        staff_quarters: "🏠",
+        hostel: "🏘️",
+        library: "📖",
+        other: "",
       };
 
-      const el = document.createElement('div');
-      el.className = 'place-marker';
-      el.innerHTML = `<div style="font-size: 24px;">${categoryIcons[place.category] || '📍'}</div>`;
-      el.style.cursor = 'pointer';
+      const el = document.createElement("div");
+      el.className = "place-marker";
+      el.innerHTML = `<div style="font-size: 24px;">${
+        categoryIcons[place.category] || ""
+      }</div>`;
+      el.style.cursor = "pointer";
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([place.longitude, place.latitude])
         .setPopup(
-          new mapboxgl.Popup({ offset: 25 })
-            .setHTML(`<strong>${place.name}</strong><br/>${place.description ? place.description.substring(0, 50) + '...' : ''}`)
+          new mapboxgl.Popup({ offset: 25 }).setHTML(
+            `<strong>${place.name}</strong><br/>${
+              place.description
+                ? place.description.substring(0, 50) + "..."
+                : ""
+            }`
+          )
         )
         .addTo(map.current);
 
@@ -422,32 +534,32 @@ const MapComponent = ({
         if (e.stopPropagation) {
           e.stopPropagation();
         }
-        
-        console.log('Place marker clicked:', { 
-          placeName: place.name, 
+
+        console.log("Place marker clicked:", {
+          placeName: place.name,
           navType: window.setNavLocationType,
-          hasNavHandler: !!window.setNavLocation 
+          hasNavHandler: !!window.setNavLocation,
         });
-        
+
         // Check if navigation mode is active - prioritize setting navigation location
         if (window.setNavLocationType && window.setNavLocation) {
-          console.log('Setting navigation location from place marker:', {
+          console.log("Setting navigation location from place marker:", {
             type: window.setNavLocationType,
             name: place.name,
             lng: place.longitude,
-            lat: place.latitude
+            lat: place.latitude,
           });
-          
+
           // Call the navigation location setter
           window.setNavLocation(place.longitude, place.latitude, place.name);
-          
+
           // The NavigationPanel will clear window.setNavLocationType, but we clear cursor here
           if (map.current) {
-            map.current.getCanvas().style.cursor = '';
+            map.current.getCanvas().style.cursor = "";
           }
           return;
         }
-        
+
         // Otherwise, open place details
         if (onPlaceSelect) {
           onPlaceSelect(place);
@@ -455,13 +567,13 @@ const MapComponent = ({
       };
 
       // Add click handler to the inner element
-      el.addEventListener('click', handlePlaceMarkerClick);
-      
+      el.addEventListener("click", handlePlaceMarkerClick);
+
       // Also add click handler to the marker element (Mapbox wraps it)
       const markerElement = marker.getElement();
       if (markerElement) {
-        markerElement.addEventListener('click', handlePlaceMarkerClick);
-        markerElement.style.cursor = 'pointer';
+        markerElement.addEventListener("click", handlePlaceMarkerClick);
+        markerElement.style.cursor = "pointer";
       }
 
       placeMarkersRef.current.push(marker);
@@ -476,21 +588,26 @@ const MapComponent = ({
 
     // Ensure routes is an array
     const safeRoutes = Array.isArray(routes) ? routes : [];
-    
+
     safeRoutes.forEach((route, routeIndex) => {
       if (!route.waypoints || route.waypoints.length === 0) return;
 
       // Create markers for waypoints
       route.waypoints.forEach((waypoint, index) => {
-        const el = document.createElement('div');
-        el.className = `custom-marker ${selectedRoute && selectedRoute._id === route._id ? 'selected' : ''}`;
-        el.style.backgroundColor = route.color || '#3b82f6';
-        
+        const el = document.createElement("div");
+        el.className = `custom-marker ${
+          selectedRoute && selectedRoute._id === route._id ? "selected" : ""
+        }`;
+        el.style.backgroundColor = route.color || "#3b82f6";
+
         const marker = new mapboxgl.Marker(el)
           .setLngLat([waypoint.longitude, waypoint.latitude])
           .setPopup(
-            new mapboxgl.Popup({ offset: 25 })
-              .setHTML(`<strong>${waypoint.name || `Point ${index + 1}`}</strong><br/>Route: ${route.name}`)
+            new mapboxgl.Popup({ offset: 25 }).setHTML(
+              `<strong>${
+                waypoint.name || `Point ${index + 1}`
+              }</strong><br/>Route: ${route.name}`
+            )
           )
           .addTo(map.current);
 
@@ -498,48 +615,55 @@ const MapComponent = ({
       });
 
       // Draw route line if there are at least 2 waypoints
-      if (route.waypoints.length >= 2 && (!selectedRoute || selectedRoute._id === route._id || selectedRoute === null)) {
+      if (
+        route.waypoints.length >= 2 &&
+        (!selectedRoute ||
+          selectedRoute._id === route._id ||
+          selectedRoute === null)
+      ) {
         const coordinates = route.waypoints
           .sort((a, b) => a.order - b.order)
-          .map(wp => [wp.longitude, wp.latitude]);
+          .map((wp) => [wp.longitude, wp.latitude]);
 
         const sourceId = `route-${routeIndex}`;
-        
+
         if (!map.current.getSource(sourceId)) {
           map.current.addSource(sourceId, {
-            type: 'geojson',
+            type: "geojson",
             data: {
-              type: 'Feature',
+              type: "Feature",
               properties: {},
               geometry: {
-                type: 'LineString',
-                coordinates: coordinates
-              }
-            }
+                type: "LineString",
+                coordinates: coordinates,
+              },
+            },
           });
 
           map.current.addLayer({
             id: `route-${routeIndex}`,
-            type: 'line',
+            type: "line",
             source: sourceId,
             layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
+              "line-join": "round",
+              "line-cap": "round",
             },
             paint: {
-              'line-color': route.color || '#3b82f6',
-              'line-width': selectedRoute && selectedRoute._id === route._id ? 6 : 4,
-              'line-opacity': selectedRoute && selectedRoute._id === route._id ? 1 : 0.7
-            }
+              "line-color": route.color || "#3b82f6",
+              "line-width":
+                selectedRoute && selectedRoute._id === route._id ? 6 : 4,
+              "line-opacity":
+                selectedRoute && selectedRoute._id === route._id ? 1 : 0.7,
+            },
           });
         } else {
           map.current.getSource(sourceId).setData({
-            type: 'Feature',
+            type: "Feature",
             properties: {},
             geometry: {
-              type: 'LineString',
-              coordinates: coordinates
-            }
+              type: "LineString",
+              coordinates: coordinates,
+            },
           });
         }
 
@@ -550,8 +674,8 @@ const MapComponent = ({
     // Fit map to show all routes if no route is selected
     if (safeRoutes.length > 0 && !selectedRoute) {
       const allCoordinates = safeRoutes
-        .flatMap(route => route.waypoints || [])
-        .map(wp => [wp.longitude, wp.latitude]);
+        .flatMap((route) => route.waypoints || [])
+        .map((wp) => [wp.longitude, wp.latitude]);
 
       if (allCoordinates.length > 0 && map.current) {
         const bounds = allCoordinates.reduce((bounds, coord) => {
@@ -560,14 +684,18 @@ const MapComponent = ({
 
         map.current.fitBounds(bounds, {
           padding: 50,
-          duration: 1000
+          duration: 1000,
         });
       }
-    } else if (selectedRoute && selectedRoute.waypoints && selectedRoute.waypoints.length > 0) {
+    } else if (
+      selectedRoute &&
+      selectedRoute.waypoints &&
+      selectedRoute.waypoints.length > 0
+    ) {
       // Fit map to selected route
       const coordinates = selectedRoute.waypoints
         .sort((a, b) => a.order - b.order)
-        .map(wp => [wp.longitude, wp.latitude]);
+        .map((wp) => [wp.longitude, wp.latitude]);
 
       const bounds = coordinates.reduce((bounds, coord) => {
         return bounds.extend(coord);
@@ -575,7 +703,7 @@ const MapComponent = ({
 
       map.current.fitBounds(bounds, {
         padding: 100,
-        duration: 1000
+        duration: 1000,
       });
     }
   }, [routes, selectedRoute, mapLoaded]);
@@ -590,7 +718,7 @@ const MapComponent = ({
 
       try {
         // Clear previous navigation markers and route
-        navMarkersRef.current.forEach(marker => marker.remove());
+        navMarkersRef.current.forEach((marker) => marker.remove());
         navMarkersRef.current = [];
 
         if (navRouteLayerRef.current) {
@@ -604,14 +732,22 @@ const MapComponent = ({
         }
 
         // Add start and end markers
-        const startMarker = new mapboxgl.Marker({ color: '#4CAF50' })
+        const startMarker = new mapboxgl.Marker({ color: "#4CAF50" })
           .setLngLat([start.lng, start.lat])
-          .setPopup(new mapboxgl.Popup().setHTML(`<strong>📍 Start</strong><br/>${start.name}`))
+          .setPopup(
+            new mapboxgl.Popup().setHTML(
+              `<strong>📍 Start</strong><br/>${start.name}`
+            )
+          )
           .addTo(map.current);
 
-        const endMarker = new mapboxgl.Marker({ color: '#f44336' })
+        const endMarker = new mapboxgl.Marker({ color: "#f44336" })
           .setLngLat([end.lng, end.lat])
-          .setPopup(new mapboxgl.Popup().setHTML(`<strong>📍 End</strong><br/>${end.name}`))
+          .setPopup(
+            new mapboxgl.Popup().setHTML(
+              `<strong>📍 End</strong><br/>${end.name}`
+            )
+          )
           .addTo(map.current);
 
         navMarkersRef.current.push(startMarker, endMarker);
@@ -623,43 +759,43 @@ const MapComponent = ({
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+        if (data.code === "Ok" && data.routes && data.routes.length > 0) {
           const route = data.routes[0];
           const geometry = route.geometry;
 
           // Display route on map
-          const sourceId = 'nav-route';
+          const sourceId = "nav-route";
           navRouteLayerRef.current = sourceId;
 
           if (!map.current.getSource(sourceId)) {
             map.current.addSource(sourceId, {
-              type: 'geojson',
+              type: "geojson",
               data: {
-                type: 'Feature',
-                geometry: geometry
-              }
+                type: "Feature",
+                geometry: geometry,
+              },
             });
           } else {
             map.current.getSource(sourceId).setData({
-              type: 'Feature',
-              geometry: geometry
+              type: "Feature",
+              geometry: geometry,
             });
           }
 
           if (!map.current.getLayer(sourceId)) {
             map.current.addLayer({
               id: sourceId,
-              type: 'line',
+              type: "line",
               source: sourceId,
               layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
+                "line-join": "round",
+                "line-cap": "round",
               },
               paint: {
-                'line-color': '#05f7ff',
-                'line-width': 6,
-                'line-opacity': 0.8
-              }
+                "line-color": "#05f7ff",
+                "line-width": 6,
+                "line-opacity": 0.8,
+              },
             });
           }
 
@@ -669,7 +805,8 @@ const MapComponent = ({
 
           const hours = Math.floor(duration / 3600);
           const minutes = Math.floor((duration % 3600) / 60);
-          const timeString = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+          const timeString =
+            hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
           const distanceKm = (distance / 1000).toFixed(2);
           const distanceMi = (distance / 1609.34).toFixed(2);
@@ -677,7 +814,7 @@ const MapComponent = ({
           setNavInfo({
             time: timeString,
             distance: `${distanceKm} km (${distanceMi} mi)`,
-            duration: duration
+            duration: duration,
           });
 
           // Fit map to show entire route
@@ -688,12 +825,12 @@ const MapComponent = ({
 
           map.current.fitBounds(bounds, {
             padding: 100,
-            duration: 1500
+            duration: 1500,
           });
         }
       } catch (error) {
-        console.error('Error calculating route:', error);
-        alert('Failed to calculate route. Please try again.');
+        console.error("Error calculating route:", error);
+        alert("Failed to calculate route. Please try again.");
       }
     };
 
@@ -703,20 +840,25 @@ const MapComponent = ({
   if (mapError) {
     return (
       <div className="map-container">
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          flexDirection: 'column',
-          padding: '2rem',
-          backgroundColor: '#f5f5f5',
-          color: '#d32f2f'
-        }}>
-          <h3 style={{ marginBottom: '1rem' }}>⚠️ Map Error</h3>
-          <p style={{ textAlign: 'center', marginBottom: '1rem' }}>{mapError}</p>
-          <p style={{ fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
-            Make sure REACT_APP_MAPBOX_ACCESS_TOKEN is set in client/.env and restart the app.
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            flexDirection: "column",
+            padding: "2rem",
+            backgroundColor: "#f5f5f5",
+            color: "#d32f2f",
+          }}
+        >
+          <h3 style={{ marginBottom: "1rem" }}>⚠️ Map Error</h3>
+          <p style={{ textAlign: "center", marginBottom: "1rem" }}>
+            {mapError}
+          </p>
+          <p style={{ fontSize: "0.9rem", color: "#666", textAlign: "center" }}>
+            Make sure REACT_APP_MAPBOX_ACCESS_TOKEN is set in client/.env and
+            restart the app.
           </p>
         </div>
       </div>
@@ -725,11 +867,17 @@ const MapComponent = ({
 
   return (
     <div className="map-container">
-      <div ref={mapContainer} className="map-container-inner" style={{ minHeight: '400px' }} />
+      <div
+        ref={mapContainer}
+        className="map-container-inner"
+        style={{ minHeight: "400px" }}
+      />
       <div className="map-controls">
         <div className="map-info">
           {routes.length > 0 && (
-            <p>{routes.length} route{routes.length !== 1 ? 's' : ''} available</p>
+            <p>
+              {routes.length} route{routes.length !== 1 ? "s" : ""} available
+            </p>
           )}
         </div>
       </div>
@@ -742,10 +890,15 @@ const MapComponent = ({
           <div className="nav-info-item">
             <strong>Distance:</strong> {navInfo.distance}
           </div>
-          <button className="nav-info-close" onClick={() => {
-            setNavInfo(null);
-            if (onNavigationClear) onNavigationClear();
-          }}>✕</button>
+          <button
+            className="nav-info-close"
+            onClick={() => {
+              setNavInfo(null);
+              if (onNavigationClear) onNavigationClear();
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>
@@ -753,4 +906,3 @@ const MapComponent = ({
 };
 
 export default MapComponent;
-

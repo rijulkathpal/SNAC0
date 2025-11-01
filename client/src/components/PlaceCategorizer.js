@@ -9,6 +9,8 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingPlace, setEditingPlace] = useState(null);
   const [isPopulating, setIsPopulating] = useState(false);
+  const [isCollectingPlaces, setIsCollectingPlaces] = useState(false);
+  const [collectedPlaces, setCollectedPlaces] = useState([]);
 
   const categories = {
     all: { label: '📍 All Places', icon: '📍' },
@@ -19,7 +21,7 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
     staff_quarters: { label: '🏠 Staff Quarters', icon: '🏠' },
     hostel: { label: '🏘️ Hostel', icon: '🏘️' },
     library: { label: '📖 Library', icon: '📖' },
-    other: { label: '📍 Other', icon: '📍' }
+    other: { label: ' Other', icon: '' }
   };
 
   useEffect(() => {
@@ -80,6 +82,121 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
     }
   };
 
+  const handleFetchFromMapbox = async () => {
+    if (!window.confirm('This will fetch all places visible in Mapbox for your campus area and store them in the database. This may take a few minutes. Continue?')) {
+      return;
+    }
+
+    setIsPopulating(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/places/fetch-from-mapbox`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ ${data.message}\n\nFound: ${data.placesFound} places\nCreated: ${data.results.success.length}\nFailed: ${data.results.failed.length}\nSkipped: ${data.results.skipped.length}`);
+        fetchPlaces(); // Refresh the places list
+      } else {
+        alert(`Error: ${data.error || 'Failed to fetch places from Mapbox'}`);
+      }
+    } catch (error) {
+      console.error('Error fetching from Mapbox:', error);
+      alert('Error fetching places from Mapbox. Please check the console.');
+    } finally {
+      setIsPopulating(false);
+    }
+  };
+
+  const handleStartCollectingPlaces = () => {
+    if (!window.confirm('Click on places visible on the map to collect them.\n\nA prompt will ask you to enter the place name.\nClick "Save Collected Places" when done.')) {
+      return;
+    }
+    
+    setIsCollectingPlaces(true);
+    setCollectedPlaces([]);
+    window.isCollectingPlaces = true;
+    window.collectPlaceCallback = (placeData) => {
+      setCollectedPlaces(prev => {
+        // Check if place already collected (by coordinates or name)
+        const existsByCoords = prev.some(p => 
+          Math.abs(p.latitude - placeData.latitude) < 0.0001 && 
+          Math.abs(p.longitude - placeData.longitude) < 0.0001
+        );
+        const existsByName = prev.some(p => 
+          p.name.toLowerCase().trim() === placeData.name.toLowerCase().trim()
+        );
+        
+        if (!existsByCoords && !existsByName) {
+          // Update UI to show new place collected
+          return [...prev, placeData];
+        } else if (existsByName) {
+          alert(`⚠️ Place "${placeData.name}" already collected.`);
+          return prev;
+        } else {
+          return prev;
+        }
+      });
+    };
+  };
+
+  const handleStopCollectingPlaces = () => {
+    setIsCollectingPlaces(false);
+    window.isCollectingPlaces = false;
+    window.collectPlaceCallback = null;
+  };
+
+  const handleSaveCollectedPlaces = async () => {
+    if (collectedPlaces.length === 0) {
+      alert('No places collected yet. Click on places on the map first.');
+      return;
+    }
+
+    if (!window.confirm(`Save ${collectedPlaces.length} collected places to database?`)) {
+      return;
+    }
+
+    setIsPopulating(true);
+    try {
+      // Let user edit names and categories before saving
+      const placesToSave = collectedPlaces.map(place => ({
+        name: place.name,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        category: 'other', // Default category, user can edit later
+        description: 'Collected from map'
+      }));
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/places/bulk-import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ places: placesToSave })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ Saved ${data.results.success.length} places!\n\nCreated: ${data.results.success.length}\nFailed: ${data.results.failed.length}\nSkipped: ${data.results.skipped.length}`);
+        setCollectedPlaces([]);
+        handleStopCollectingPlaces();
+        fetchPlaces(); // Refresh the places list
+      } else {
+        alert(`Error: ${data.error || 'Failed to save places'}`);
+      }
+    } catch (error) {
+      console.error('Error saving collected places:', error);
+      alert('Error saving places. Please check the console.');
+    } finally {
+      setIsPopulating(false);
+    }
+  };
+
   const groupedPlaces = places.reduce((acc, place) => {
     const category = place.category || 'other';
     if (!acc[category]) {
@@ -109,7 +226,7 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
     <div className="place-categorizer">
       <div className="categorizer-header">
         <h3>🗺️ Places</h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button 
             className="btn-populate-places" 
             onClick={handlePopulateCollegePlaces}
@@ -128,10 +245,106 @@ const PlaceCategorizer = ({ onPlaceSelect }) => {
           >
             {isPopulating ? '⏳ Loading...' : '🌐 Populate Places'}
           </button>
+          <button 
+            className="btn-fetch-mapbox" 
+            onClick={handleFetchFromMapbox}
+            disabled={isPopulating}
+            title="Fetch all places visible in Mapbox and store them"
+            style={{
+              padding: '0.5rem 1rem',
+              background: isPopulating ? '#ccc' : '#2196F3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isPopulating ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: '500'
+            }}
+          >
+            {isPopulating ? '⏳ Fetching...' : '🗺️ Fetch from Mapbox'}
+          </button>
+          {!isCollectingPlaces ? (
+            <button 
+              onClick={handleStartCollectingPlaces}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#FF9800',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}
+              title="Click on places on the map to collect them"
+            >
+              📍 Collect from Map
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={handleSaveCollectedPlaces}
+                disabled={isPopulating || collectedPlaces.length === 0}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: isPopulating || collectedPlaces.length === 0 ? '#ccc' : '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isPopulating || collectedPlaces.length === 0 ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+                title={`Save ${collectedPlaces.length} collected places`}
+              >
+                💾 Save Collected ({collectedPlaces.length})
+              </button>
+              <button 
+                onClick={handleStopCollectingPlaces}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#f44336',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                ✕ Stop Collecting
+              </button>
+            </>
+          )}
           <button className="btn-add-place" onClick={() => setIsCreating(true)}>
             + Add Place
           </button>
         </div>
+        {isCollectingPlaces && (
+          <div style={{
+            padding: '0.75rem',
+            margin: '0.5rem 0',
+            backgroundColor: '#fff3cd',
+            border: '1px solid #ffc107',
+            borderRadius: '6px',
+            fontSize: '0.875rem'
+          }}>
+            <strong>📍 Collection Mode Active!</strong><br/>
+            Click on places visible on the map, then enter their name in the prompt.
+            {collectedPlaces.length > 0 && (
+              <>
+                <br/><strong>Collected: {collectedPlaces.length} place{collectedPlaces.length !== 1 ? 's' : ''}</strong>
+                <div style={{ marginTop: '0.5rem', maxHeight: '150px', overflowY: 'auto', fontSize: '0.8rem' }}>
+                  {collectedPlaces.map((place, idx) => (
+                    <div key={idx} style={{ padding: '0.25rem 0', borderBottom: '1px solid #ffc107' }}>
+                      {idx + 1}. {place.name}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="category-filter">
