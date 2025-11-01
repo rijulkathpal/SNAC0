@@ -87,12 +87,34 @@ const MapComponent = ({
         map.current.on('load', () => {
           setMapLoaded(true);
           setMapError(null);
+          console.log('Map loaded successfully');
         });
 
         map.current.on('error', (e) => {
-          console.error('Mapbox error:', e);
-          setMapError('Failed to load map. Please check your Mapbox API key and restart the app.');
+          // Only show critical errors, ignore analytics and tile warnings
+          if (e.error && e.error.message) {
+            const errorMsg = e.error.message;
+            // Filter out non-critical errors
+            if (!errorMsg.includes('events.mapbox.com') && 
+                !errorMsg.includes('404') && 
+                !errorMsg.includes('featureNamespace') &&
+                !errorMsg.includes('Terrain and hillshade')) {
+              console.error('Mapbox error:', e);
+              setMapError('Failed to load map. Please check your Mapbox API key and restart the app.');
+            }
+          }
         });
+
+        // Suppress non-critical warnings
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+          const message = args.join(' ');
+          if (!message.includes('featureNamespace') && 
+              !message.includes('Terrain and hillshade') &&
+              !message.includes('ERR_BLOCKED_BY_CLIENT')) {
+            originalWarn.apply(console, args);
+          }
+        };
       } catch (error) {
         console.error('Error initializing map:', error);
         setMapError('Error initializing map. Please check the browser console for details.');
@@ -381,91 +403,15 @@ const MapComponent = ({
     routeLinesRef.current = [];
   };
 
-  // Display places on map
+  // Display places on map - DISABLED: Interactive place markers removed
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Clear previous place markers
+    // Clear all existing place markers
     placeMarkersRef.current.forEach(marker => marker.remove());
     placeMarkersRef.current = [];
 
-    const safePlaces = Array.isArray(places) ? places : [];
-    
-    safePlaces.forEach((place) => {
-      const categoryIcons = {
-        eateries: '🍽️',
-        recreation: '⚽',
-        educational: '📚',
-        administration: '🏛️',
-        staff_quarters: '🏠',
-        hostel: '🏘️',
-        library: '📖',
-        other: '📍'
-      };
-
-      const el = document.createElement('div');
-      el.className = 'place-marker';
-      el.innerHTML = `<div style="font-size: 24px;">${categoryIcons[place.category] || '📍'}</div>`;
-      el.style.cursor = 'pointer';
-
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([place.longitude, place.latitude])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 })
-            .setHTML(`<strong>${place.name}</strong><br/>${place.description ? place.description.substring(0, 50) + '...' : ''}`)
-        )
-        .addTo(map.current);
-
-      // Click handler for place marker - check navigation mode first
-      const handlePlaceMarkerClick = (e) => {
-        // Prevent event from bubbling to map click
-        if (e.stopPropagation) {
-          e.stopPropagation();
-        }
-        
-        console.log('Place marker clicked:', { 
-          placeName: place.name, 
-          navType: window.setNavLocationType,
-          hasNavHandler: !!window.setNavLocation 
-        });
-        
-        // Check if navigation mode is active - prioritize setting navigation location
-        if (window.setNavLocationType && window.setNavLocation) {
-          console.log('Setting navigation location from place marker:', {
-            type: window.setNavLocationType,
-            name: place.name,
-            lng: place.longitude,
-            lat: place.latitude
-          });
-          
-          // Call the navigation location setter
-          window.setNavLocation(place.longitude, place.latitude, place.name);
-          
-          // The NavigationPanel will clear window.setNavLocationType, but we clear cursor here
-          if (map.current) {
-            map.current.getCanvas().style.cursor = '';
-          }
-          return;
-        }
-        
-        // Otherwise, open place details
-        if (onPlaceSelect) {
-          onPlaceSelect(place);
-        }
-      };
-
-      // Add click handler to the inner element
-      el.addEventListener('click', handlePlaceMarkerClick);
-      
-      // Also add click handler to the marker element (Mapbox wraps it)
-      const markerElement = marker.getElement();
-      if (markerElement) {
-        markerElement.addEventListener('click', handlePlaceMarkerClick);
-        markerElement.style.cursor = 'pointer';
-      }
-
-      placeMarkersRef.current.push(marker);
-    });
+    // Place markers are disabled - places are still searchable but not displayed as markers on map
   }, [places, mapLoaded, onPlaceSelect]);
 
   // Display routes on map

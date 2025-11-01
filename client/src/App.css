@@ -42,6 +42,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
+  min-height: 0;
 }
 
 .sidebar-panel {
@@ -51,10 +52,31 @@
   padding: 1rem;
   background: #f5f5f5;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   transition: width 0.3s ease;
+  height: 100%;
+  position: relative;
+}
+
+.sidebar-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.sidebar-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.sidebar-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .sidebar-panel.hidden {
