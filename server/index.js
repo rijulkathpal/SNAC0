@@ -22,6 +22,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus_na
 
 // Routes
 app.use('/api/routes', routeRoutes);
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/support', require('./routes/supportRoutes'));
 app.use('/api/places', placeRoutes);
 
 // Health check
